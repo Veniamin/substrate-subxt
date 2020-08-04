@@ -194,7 +194,7 @@ impl<T: Runtime> Rpc<T> {
     /// Get a Block
     pub async fn transaction_fee(
         &self,
-        extrinsic: T::Hash,
+        extrinsic: Bytes,
     ) -> Result<Option<RuntimeDispatchInfo<<T as Balances>::Balance>>, Error> {
         let params = Params::Array(vec![to_json_value(extrinsic)?]);
         let dispatch_info = self.client.request("payment_queryInfo", params).await?;
