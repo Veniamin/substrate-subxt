@@ -250,13 +250,10 @@ impl<T: Runtime> Client<T> {
     }
 
     /// Get actual transaction fee
-    pub async fn transaction_fee<H>(
+    pub async fn transaction_fee(
         &self,
         extrinsic: Bytes,
-    ) -> Result<Option<RuntimeDispatchInfo<<T as Balances>::Balance>>, Error>
-    where
-        H: Into<T::Hash> + 'static,
-    {
+    ) -> Result<Option<RuntimeDispatchInfo<<T as Balances>::Balance>>, Error> {
         let dispatch_info = self.rpc.transaction_fee(extrinsic).await?;
         Ok(dispatch_info)
     }
