@@ -3,7 +3,7 @@ members = [".", "client", "proc-macro", "test-node"]
 
 [package]
 name = "substrate-subxt"
-version = "0.11.0"
+version = "0.11.1"
 authors = ["Parity Technologies <admin@parity.io>"]
 edition = "2018"
 
@@ -41,6 +41,12 @@ tag="v2.0.0-rc5+2"
 
 [dependencies.frame-support]
 git = 'https://github.com/paritytech/substrate.git'
+version = '2.0.0-rc5'
+tag="v2.0.0-rc5+2"
+
+[dependencies.pallet-transaction-payment-rpc-runtime-api]
+git = 'https://github.com/paritytech/substrate.git'
+package = 'pallet-transaction-payment-rpc-runtime-api'
 version = '2.0.0-rc5'
 tag="v2.0.0-rc5+2"
 

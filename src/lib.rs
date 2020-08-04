@@ -53,10 +53,7 @@ use futures::future;
 use jsonrpsee::client::Subscription;
 use sc_rpc_api::state::ReadProof;
 use sp_core::{
-    storage::{
-        StorageChangeSet,
-        StorageKey,
-    },
+    storage::{StorageChangeSet, StorageKey},
     Bytes,
 };
 pub use sp_runtime::traits::SignedExtension;
@@ -74,40 +71,21 @@ mod subscription;
 
 pub use crate::{
     error::Error,
-    events::{
-        EventsDecoder,
-        RawEvent,
-    },
-    extrinsic::{
-        PairSigner,
-        SignedExtra,
-        Signer,
-        UncheckedExtrinsic,
-    },
+    events::{EventsDecoder, RawEvent},
+    extrinsic::{PairSigner, SignedExtra, Signer, UncheckedExtrinsic},
     frame::*,
-    metadata::{
-        Metadata,
-        MetadataError,
-    },
-    rpc::{
-        BlockNumber,
-        ExtrinsicSuccess,
-    },
+    metadata::{Metadata, MetadataError},
+    rpc::{BlockNumber, ExtrinsicSuccess},
     runtimes::*,
     subscription::*,
     substrate_subxt_proc_macro::*,
 };
 use crate::{
-    frame::system::{
-        AccountStoreExt,
-        Phase,
-        System,
-    },
-    rpc::{
-        ChainBlock,
-        Rpc,
-    },
+    frame::balances::Balances,
+    frame::system::{AccountStoreExt, Phase, System},
+    rpc::{ChainBlock, Rpc},
 };
+use pallet_transaction_payment_rpc_runtime_api::RuntimeDispatchInfo;
 
 /// ClientBuilder for constructing a Client.
 #[derive(Default)]
@@ -269,6 +247,18 @@ impl<T: Runtime> Client<T> {
     {
         let block = self.rpc.block(hash.map(|h| h.into())).await?;
         Ok(block)
+    }
+
+    /// Get actual transaction fee
+    pub async fn transaction_fee<H>(
+        &self,
+        extrinsic: H,
+    ) -> Result<Option<RuntimeDispatchInfo<<T as Balances>::Balance>>, Error>
+    where
+        H: Into<T::Hash> + 'static,
+    {
+        let dispatch_info = self.rpc.transaction_fee(extrinsic.into()).await?;
+        Ok(dispatch_info)
     }
 
     /// Get proof of storage entries at a specific block's state.
@@ -456,17 +446,10 @@ impl codec::Encode for Encoded {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sp_core::storage::{
-        well_known_keys,
-        StorageKey,
-    };
+    use sp_core::storage::{well_known_keys, StorageKey};
     use sp_keyring::AccountKeyring;
     use substrate_subxt_client::{
-        DatabaseConfig,
-        KeystoreConfig,
-        Role,
-        SubxtClient,
-        SubxtClientConfig,
+        DatabaseConfig, KeystoreConfig, Role, SubxtClient, SubxtClientConfig,
     };
     use tempdir::TempDir;
 

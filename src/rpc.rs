@@ -19,44 +19,24 @@
 // Related: https://github.com/paritytech/substrate-subxt/issues/66
 #![allow(irrefutable_let_patterns)]
 
-use codec::{
-    Decode,
-    Encode,
-    Error as CodecError,
-};
-use core::{
-    convert::TryInto,
-    marker::PhantomData,
-};
+use codec::{Decode, Encode, Error as CodecError};
+use core::{convert::TryInto, marker::PhantomData};
 use frame_metadata::RuntimeMetadataPrefixed;
 use jsonrpsee::{
     client::Subscription,
-    common::{
-        to_value as to_json_value,
-        Params,
-    },
+    common::{to_value as to_json_value, Params},
     Client,
 };
+use pallet_transaction_payment_rpc_runtime_api::RuntimeDispatchInfo;
 use sc_rpc_api::state::ReadProof;
 use serde::Serialize;
 use sp_core::{
-    storage::{
-        StorageChangeSet,
-        StorageData,
-        StorageKey,
-    },
-    twox_128,
-    Bytes,
+    storage::{StorageChangeSet, StorageData, StorageKey},
+    twox_128, Bytes,
 };
-use sp_rpc::{
-    list::ListOrValue,
-    number::NumberOrHex,
-};
+use sp_rpc::{list::ListOrValue, number::NumberOrHex};
 use sp_runtime::{
-    generic::{
-        Block,
-        SignedBlock,
-    },
+    generic::{Block, SignedBlock},
     traits::Hash,
 };
 use sp_transaction_pool::TransactionStatus;
@@ -64,14 +44,8 @@ use sp_version::RuntimeVersion;
 
 use crate::{
     error::Error,
-    events::{
-        EventsDecoder,
-        RawEvent,
-    },
-    frame::{
-        system::System,
-        Event,
-    },
+    events::{EventsDecoder, RawEvent},
+    frame::{balances::Balances, system::System, Event},
     metadata::Metadata,
     runtimes::Runtime,
     subscription::EventSubscription,
@@ -215,6 +189,16 @@ impl<T: Runtime> Rpc<T> {
         let params = Params::Array(vec![to_json_value(hash)?]);
         let block = self.client.request("chain_getBlock", params).await?;
         Ok(block)
+    }
+
+    /// Get a Block
+    pub async fn transaction_fee(
+        &self,
+        extrinsic: T::Hash,
+    ) -> Result<Option<RuntimeDispatchInfo<<T as Balances>::Balance>>, Error> {
+        let params = Params::Array(vec![to_json_value(extrinsic)?]);
+        let dispatch_info = self.client.request("payment_queryInfo", params).await?;
+        Ok(dispatch_info)
     }
 
     /// Get proof of storage entries at a specific block's state.
@@ -377,7 +361,7 @@ impl<T: Runtime> Rpc<T> {
                         None => {
                             Err(format!("Failed to find block {:?}", block_hash).into())
                         }
-                    }
+                    };
                 }
                 TransactionStatus::Invalid => return Err("Extrinsic Invalid".into()),
                 TransactionStatus::Usurped(_) => return Err("Extrinsic Usurped".into()),

@@ -16,21 +16,11 @@
 
 //! Implements support for the pallet_balances module.
 
-use crate::frame::system::{
-    System,
-    SystemEventsDecoder,
-};
-use codec::{
-    Decode,
-    Encode,
-};
+use crate::frame::system::{System, SystemEventsDecoder};
+use codec::{Decode, Encode};
 use core::marker::PhantomData;
 use frame_support::Parameter;
-use sp_runtime::traits::{
-    AtLeast32Bit,
-    MaybeSerialize,
-    Member,
-};
+use sp_runtime::traits::{AtLeast32Bit, MaybeSerialize, Member};
 use std::fmt::Debug;
 
 /// The subset of the `pallet_balances::Trait` that a client must implement.
@@ -45,7 +35,8 @@ pub trait Balances: System {
         + Copy
         + MaybeSerialize
         + Debug
-        + From<<Self as System>::BlockNumber>;
+        + From<<Self as System>::BlockNumber>
+        + std::str::FromStr;
 }
 
 /// All balance information for an account.
@@ -110,26 +101,14 @@ pub struct TransferEvent<T: Balances> {
 mod tests {
     use super::*;
     use crate::{
-        error::{
-            Error,
-            RuntimeError,
-        },
+        error::{Error, RuntimeError},
         events::EventsDecoder,
-        extrinsic::{
-            PairSigner,
-            Signer,
-        },
+        extrinsic::{PairSigner, Signer},
         subscription::EventSubscription,
         system::AccountStoreExt,
-        tests::{
-            test_client,
-            TestRuntime,
-        },
+        tests::{test_client, TestRuntime},
     };
-    use sp_core::{
-        sr25519::Pair,
-        Pair as _,
-    };
+    use sp_core::{sr25519::Pair, Pair as _};
     use sp_keyring::AccountKeyring;
 
     #[async_std::test]
