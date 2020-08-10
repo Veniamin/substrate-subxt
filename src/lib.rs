@@ -364,6 +364,17 @@ impl<T: Runtime> Client<T> {
             .await
     }
 
+    /// Create and submit an extrinsic and return a tuple of corresponding Event if successful and fee
+    pub async fn submit_and_watch_extrinsic_with_fee(
+        &self,
+        extrinsic: UncheckedExtrinsic<T>,
+        decoder: EventsDecoder<T>,
+    ) -> Result<(ExtrinsicSuccess<T>, Option<RuntimeDispatchInfo<<T as Balances>::Balance>>), Error> {
+        self.rpc
+            .submit_and_watch_extrinsic_with_fee(extrinsic, decoder)
+            .await
+    }
+
     /// Submits a transaction to the chain.
     pub async fn submit<C: Call<T> + Send + Sync>(
         &self,
@@ -391,6 +402,21 @@ impl<T: Runtime> Client<T> {
         let extrinsic = self.create_signed(call, signer).await?;
         let decoder = self.events_decoder::<C>();
         self.submit_and_watch_extrinsic(extrinsic, decoder).await
+    }
+
+    /// Submits transaction to the chain and watch for events.
+    pub async fn watch_with_fee<C: Call<T> + Send + Sync>(
+        &self,
+        call: C,
+        signer: &(dyn Signer<T> + Send + Sync),
+    ) -> Result<(ExtrinsicSuccess<T>, Option<RuntimeDispatchInfo<<T as Balances>::Balance>>), Error>
+    where
+        <<T::Extra as SignedExtra<T>>::Extra as SignedExtension>::AdditionalSigned:
+            Send + Sync,
+    {
+        let extrinsic = self.create_signed(call, signer).await?;
+        let decoder = self.events_decoder::<C>();
+        self.submit_and_watch_extrinsic_with_fee(extrinsic, decoder).await
     }
 
     /// Insert a key into the keystore.

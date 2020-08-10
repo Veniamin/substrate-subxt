@@ -45,7 +45,7 @@ use sp_version::RuntimeVersion;
 use crate::{
     error::Error,
     events::{EventsDecoder, RawEvent},
-    frame::{balances::Balances, system::System, Event},
+    frame::{balances::Balances, system::System, Event,},
     metadata::Metadata,
     runtimes::Runtime,
     subscription::EventSubscription,
@@ -191,7 +191,7 @@ impl<T: Runtime> Rpc<T> {
         Ok(block)
     }
 
-    /// Get a Block
+    /// Get a transaction fee
     pub async fn transaction_fee(
         &self,
         extrinsic: Bytes,
@@ -357,6 +357,108 @@ impl<T: Runtime> Rpc<T> {
                                 extrinsic: ext_hash,
                                 events,
                             })
+                        }
+                        None => {
+                            Err(format!("Failed to find block {:?}", block_hash).into())
+                        }
+                    };
+                }
+                TransactionStatus::Invalid => return Err("Extrinsic Invalid".into()),
+                TransactionStatus::Usurped(_) => return Err("Extrinsic Usurped".into()),
+                TransactionStatus::Dropped => return Err("Extrinsic Dropped".into()),
+                TransactionStatus::Retracted(_) => {
+                    return Err("Extrinsic Retracted".into())
+                }
+                // should have made it `InBlock` before either of these
+                TransactionStatus::Finalized(_) => {
+                    return Err("Extrinsic Finalized".into())
+                }
+                TransactionStatus::FinalityTimeout(_) => {
+                    return Err("Extrinsic FinalityTimeout".into())
+                }
+            }
+        }
+        unreachable!()
+    }
+
+    /// Create and submit an extrinsic and return tuple with corresponding Event if successful and fee
+    pub async fn submit_and_watch_extrinsic_with_fee<E: Encode + 'static>(
+        &self,
+        extrinsic: E,
+        decoder: EventsDecoder<T>,
+        // T as Balances>::Balance
+    ) -> Result<(ExtrinsicSuccess<T>, Option<RuntimeDispatchInfo<<T as Balances>::Balance>>), Error> {
+        let ext_hash = T::Hashing::hash_of(&extrinsic);
+        log::info!("Submitting Extrinsic `{:?}`", ext_hash);
+
+        let events_sub = self.subscribe_events().await?;
+        let mut xt_sub = self.watch_extrinsic(extrinsic).await?;
+
+        while let status = xt_sub.next().await {
+            log::info!("received status {:?}", status);
+            match status {
+                // ignore in progress extrinsic for now
+                TransactionStatus::Future
+                | TransactionStatus::Ready
+                | TransactionStatus::Broadcast(_) => continue,
+                TransactionStatus::InBlock(block_hash) => {
+                    log::info!("Fetching block {:?}", block_hash);
+                    let block = self.block(Some(block_hash)).await?;
+                    return match block {
+                        Some(signed_block) => {
+                            log::info!(
+                                "Found block {:?}, with {} extrinsics",
+                                block_hash,
+                                signed_block.block.extrinsics.len()
+                            );
+                            let ext_index = signed_block
+                                .block
+                                .extrinsics
+                                .iter()
+                                .position(|ext| {
+                                    let hash = T::Hashing::hash_of(ext);
+                                    hash == ext_hash
+                                })
+                                .ok_or_else(|| {
+                                    Error::Other(format!(
+                                        "Failed to find Extrinsic with hash {:?}",
+                                        ext_hash,
+                                    ))
+                                })?;
+                            let mut sub = EventSubscription::new(events_sub, decoder);
+                            sub.filter_extrinsic(block_hash, ext_index);
+                            let mut events = vec![];
+                            while let Some(event) = sub.next().await {
+                                events.push(event?);
+                            }
+
+                            let extrinsic = Bytes::from(signed_block.block.extrinsics[ext_index].encode());
+                            let dispatch_info = self.transaction_fee(extrinsic).await;
+
+                            // if dispatch_info.is_err() {
+                            //     log::error!("Failed to get dispatch info (fee) {:?}", dispatch_info.err());
+                            //     Ok((
+                            //         ExtrinsicSuccess {
+                            //         block: block_hash,
+                            //         extrinsic: ext_hash,
+                            //         events,
+                            //     },
+                            //         RuntimeDispatchInfo {
+                            //            weight: 0,
+                            //            class: DispatchClass::Normal,
+                            //            partial_fee: 0, // TODO: zero balance
+                            //        }
+                            //     ))
+                            // } else {}
+                    
+                            Ok((
+                                ExtrinsicSuccess {
+                                block: block_hash,
+                                extrinsic: ext_hash,
+                                events,
+                            },
+                                dispatch_info.unwrap()
+                            ))
                         }
                         None => {
                             Err(format!("Failed to find block {:?}", block_hash).into())
