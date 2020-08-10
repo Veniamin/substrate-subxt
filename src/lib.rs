@@ -48,7 +48,7 @@ pub use substrate_subxt_client as client;
 pub use sp_core;
 pub use sp_runtime;
 
-use codec::Decode;
+use codec::{Encode, Decode};
 use futures::future;
 use jsonrpsee::client::Subscription;
 use sc_rpc_api::state::ReadProof;
@@ -254,7 +254,23 @@ impl<T: Runtime> Client<T> {
         &self,
         extrinsic: Bytes,
     ) -> Result<Option<RuntimeDispatchInfo<<T as Balances>::Balance>>, Error> {
+
         let dispatch_info = self.rpc.transaction_fee(extrinsic).await?;
+        Ok(dispatch_info)
+    }
+
+    /// Get actual transaction fee before submitting
+    pub async fn transaction_fee_by_call<C: Call<T> + Send + Sync>(
+        &self,
+        call: C,
+        signer: &(dyn Signer<T> + Send + Sync),
+    ) -> Result<Option<RuntimeDispatchInfo<<T as Balances>::Balance>>, Error> 
+    where
+        <<T::Extra as SignedExtra<T>>::Extra as SignedExtension>::AdditionalSigned:
+            Send + Sync,
+    {
+        let extrinsic = self.create_signed(call, signer).await?;
+        let dispatch_info = self.rpc.transaction_fee(Bytes::from(extrinsic.encode())).await?;
         Ok(dispatch_info)
     }
 
