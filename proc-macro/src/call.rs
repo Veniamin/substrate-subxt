@@ -159,6 +159,14 @@ mod tests {
                     to: &'a <T as System>::Address,
                     amount: T::Balance,
                 ) -> core::pin::Pin<Box<dyn core::future::Future<Output = Result<substrate_subxt::ExtrinsicSuccess<T>, substrate_subxt::Error>> + Send + 'a>>;
+
+                /// Create, submit and watch an extrinsic with fee.
+                fn transfer_and_watch_with_fee<'a, Balance: std::str::FromStr + 'a>(
+                    &'a self,
+                    signer: &'a (dyn substrate_subxt::Signer<T> + Send + Sync),
+                    to: &'a <T as System>::Address,
+                    amount: T::Balance,
+                ) -> core::pin::Pin<Box<dyn core::future::Future<Output = Result<(substrate_subxt::ExtrinsicSuccess<T>, Option<RuntimeDispatchInfo<Balance>>), substrate_subxt::Error>> + Send + 'a>>;
             }
 
             impl<T: substrate_subxt::Runtime + Balances> TransferCallExt<T> for substrate_subxt::Client<T>
@@ -183,6 +191,16 @@ mod tests {
                 ) -> core::pin::Pin<Box<dyn core::future::Future<Output = Result<substrate_subxt::ExtrinsicSuccess<T>, substrate_subxt::Error>> + Send + 'a>> {
                     let _ = core::marker::PhantomData::<T>;
                     Box::pin(self.watch(TransferCall { to, amount, }, signer))
+                }
+
+                fn transfer_and_watch_with_fee<'a, Balance: std::str::FromStr + 'a>(
+                    &'a self,
+                    signer: &'a (dyn substrate_subxt::Signer<T> + Send + Sync),
+                    to: &'a <T as System>::Address,
+                    amount: T::Balance,
+                ) -> core::pin::Pin<Box<dyn core::future::Future<Output = Result<(substrate_subxt::ExtrinsicSuccess<T>, Option<RuntimeDispatchInfo<Balance>>), substrate_subxt::Error>> + Send + 'a>> {
+                    let _ = core::marker::PhantomData::<T>;
+                    Box::pin(self.watch_with_fee(TransferCall { to, amount, }, signer))
                 }
             }
         };
