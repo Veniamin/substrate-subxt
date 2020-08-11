@@ -46,6 +46,7 @@ use sp_runtime::{
     DispatchError,
 };
 use std::fmt::Debug;
+use pallet_transaction_payment_rpc_runtime_api::RuntimeDispatchInfo;
 
 /// The subset of the `frame::Trait` that a client must implement.
 #[module]

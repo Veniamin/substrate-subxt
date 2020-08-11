@@ -250,21 +250,21 @@ impl<T: Runtime> Client<T> {
     }
 
     /// Get actual transaction fee
-    pub async fn transaction_fee(
+    pub async fn transaction_fee<Balance: std::str::FromStr>(
         &self,
         extrinsic: Bytes,
-    ) -> Result<Option<RuntimeDispatchInfo<<T as Balances>::Balance>>, Error> {
+    ) -> Result<Option<RuntimeDispatchInfo<Balance>>, Error> {
 
         let dispatch_info = self.rpc.transaction_fee(extrinsic).await?;
         Ok(dispatch_info)
     }
 
     /// Get actual transaction fee before submitting
-    pub async fn transaction_fee_by_call<C: Call<T> + Send + Sync>(
+    pub async fn transaction_fee_by_call<C: Call<T> + Send + Sync, Balance: std::str::FromStr>(
         &self,
         call: C,
         signer: &(dyn Signer<T> + Send + Sync),
-    ) -> Result<Option<RuntimeDispatchInfo<<T as Balances>::Balance>>, Error> 
+    ) -> Result<Option<RuntimeDispatchInfo<Balance>>, Error> 
     where
         <<T::Extra as SignedExtra<T>>::Extra as SignedExtension>::AdditionalSigned:
             Send + Sync,
@@ -381,11 +381,11 @@ impl<T: Runtime> Client<T> {
     }
 
     /// Create and submit an extrinsic and return a tuple of corresponding Event if successful and fee
-    pub async fn submit_and_watch_extrinsic_with_fee(
+    pub async fn submit_and_watch_extrinsic_with_fee<Balance: std::str::FromStr>(
         &self,
         extrinsic: UncheckedExtrinsic<T>,
         decoder: EventsDecoder<T>,
-    ) -> Result<(ExtrinsicSuccess<T>, Option<RuntimeDispatchInfo<<T as Balances>::Balance>>), Error> {
+    ) -> Result<(ExtrinsicSuccess<T>, Option<RuntimeDispatchInfo<Balance>>), Error> {
         self.rpc
             .submit_and_watch_extrinsic_with_fee(extrinsic, decoder)
             .await
@@ -421,11 +421,11 @@ impl<T: Runtime> Client<T> {
     }
 
     /// Submits transaction to the chain and watch for events.
-    pub async fn watch_with_fee<C: Call<T> + Send + Sync>(
+    pub async fn watch_with_fee<C: Call<T> + Send + Sync, Balance: std::str::FromStr>(
         &self,
         call: C,
         signer: &(dyn Signer<T> + Send + Sync),
-    ) -> Result<(ExtrinsicSuccess<T>, Option<RuntimeDispatchInfo<<T as Balances>::Balance>>), Error>
+    ) -> Result<(ExtrinsicSuccess<T>, Option<RuntimeDispatchInfo<Balance>>), Error>
     where
         <<T::Extra as SignedExtra<T>>::Extra as SignedExtension>::AdditionalSigned:
             Send + Sync,

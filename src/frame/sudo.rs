@@ -25,6 +25,7 @@ use crate::{
 };
 use codec::Encode;
 use core::marker::PhantomData;
+use pallet_transaction_payment_rpc_runtime_api::RuntimeDispatchInfo;
 
 /// The subset of the `frame_sudo::Trait` that a client must implement.
 #[module]

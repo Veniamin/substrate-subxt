@@ -22,6 +22,7 @@ use core::marker::PhantomData;
 use frame_support::Parameter;
 use sp_runtime::traits::{AtLeast32Bit, MaybeSerialize, Member};
 use std::fmt::Debug;
+use pallet_transaction_payment_rpc_runtime_api::RuntimeDispatchInfo;
 
 /// The subset of the `pallet_balances::Trait` that a client must implement.
 #[module]

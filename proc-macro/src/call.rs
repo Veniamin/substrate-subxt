@@ -46,6 +46,7 @@ pub fn call(s: Structure) -> TokenStream {
     let call_trait = format_ident!("{}CallExt", call_name.to_camel_case());
     let call = format_ident!("{}", call_name);
     let call_and_watch = format_ident!("{}_and_watch", call_name);
+    let call_and_watch_with_fee = format_ident!("{}_and_watch_with_fee", call_name);
 
     quote! {
         impl#generics #subxt::Call<T> for #ident<#(#params),*> {
@@ -73,6 +74,13 @@ pub fn call(s: Structure) -> TokenStream {
                 signer: &'a (dyn #subxt::Signer<T> + Send + Sync),
                 #args
             ) -> core::pin::Pin<Box<dyn core::future::Future<Output = Result<#subxt::ExtrinsicSuccess<T>, #subxt::Error>> + Send + 'a>>;
+
+            /// Create, submit and watch an extrinsic with fee.
+            fn #call_and_watch_with_fee<'a, Balance: std::str::FromStr + 'a>(
+                &'a self,
+                signer: &'a (dyn #subxt::Signer<T> + Send + Sync),
+                #args
+            ) -> core::pin::Pin<Box<dyn core::future::Future<Output = Result<(#subxt::ExtrinsicSuccess<T>, Option<RuntimeDispatchInfo<Balance>>), #subxt::Error>> + Send + 'a>>;
         }
 
         impl<T: #subxt::Runtime + #module> #call_trait<T> for #subxt::Client<T>
@@ -95,6 +103,15 @@ pub fn call(s: Structure) -> TokenStream {
             ) -> core::pin::Pin<Box<dyn core::future::Future<Output = Result<#subxt::ExtrinsicSuccess<T>, #subxt::Error>> + Send + 'a>> {
                 let #marker = core::marker::PhantomData::<T>;
                 Box::pin(self.watch(#build_struct, signer))
+            }
+
+            fn #call_and_watch_with_fee<'a, Balance: std::str::FromStr + 'a>(
+                &'a self,
+                signer: &'a (dyn #subxt::Signer<T> + Send + Sync),
+                #args
+            ) -> core::pin::Pin<Box<dyn core::future::Future<Output = Result<(#subxt::ExtrinsicSuccess<T>, Option<RuntimeDispatchInfo<Balance>>), #subxt::Error>> + Send + 'a>> {
+                let #marker = core::marker::PhantomData::<T>;
+                Box::pin(self.watch_with_fee(#build_struct, signer))
             }
         }
     }

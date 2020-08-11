@@ -31,6 +31,7 @@ use codec::{
     Encode,
 };
 use core::marker::PhantomData;
+use pallet_transaction_payment_rpc_runtime_api::RuntimeDispatchInfo;
 
 /// Gas units are chosen to be represented by u64 so that gas metering
 /// instructions can operate on them efficiently.

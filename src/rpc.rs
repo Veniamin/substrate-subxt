@@ -192,10 +192,10 @@ impl<T: Runtime> Rpc<T> {
     }
 
     /// Get a transaction fee
-    pub async fn transaction_fee(
+    pub async fn transaction_fee<Balance: std::str::FromStr>(
         &self,
         extrinsic: Bytes,
-    ) -> Result<Option<RuntimeDispatchInfo<<T as Balances>::Balance>>, Error> {
+    ) -> Result<Option<RuntimeDispatchInfo<Balance>>, Error> {
         let params = Params::Array(vec![to_json_value(extrinsic)?]);
         let dispatch_info = self.client.request("payment_queryInfo", params).await?;
         Ok(dispatch_info)
@@ -382,12 +382,11 @@ impl<T: Runtime> Rpc<T> {
     }
 
     /// Create and submit an extrinsic and return tuple with corresponding Event if successful and fee
-    pub async fn submit_and_watch_extrinsic_with_fee<E: Encode + 'static>(
+    pub async fn submit_and_watch_extrinsic_with_fee<E: Encode + 'static, Balance: std::str::FromStr>(
         &self,
         extrinsic: E,
         decoder: EventsDecoder<T>,
-        // T as Balances>::Balance
-    ) -> Result<(ExtrinsicSuccess<T>, Option<RuntimeDispatchInfo<<T as Balances>::Balance>>), Error> {
+    ) -> Result<(ExtrinsicSuccess<T>, Option<RuntimeDispatchInfo<Balance>>), Error> {
         let ext_hash = T::Hashing::hash_of(&extrinsic);
         log::info!("Submitting Extrinsic `{:?}`", ext_hash);
 
