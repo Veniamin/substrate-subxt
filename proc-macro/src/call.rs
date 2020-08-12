@@ -80,7 +80,7 @@ pub fn call(s: Structure) -> TokenStream {
                 &'a self,
                 signer: &'a (dyn #subxt::Signer<T> + Send + Sync),
                 #args
-            ) -> core::pin::Pin<Box<dyn core::future::Future<Output = Result<(#subxt::ExtrinsicSuccess<T>, Option<RuntimeDispatchInfo<Balance>>), #subxt::Error>> + Send + 'a>>;
+            ) -> core::pin::Pin<Box<dyn core::future::Future<Output = Result<#subxt::ExtrinsicSuccessWithFee<T, Balance>, #subxt::Error>> + Send + 'a>>;
         }
 
         impl<T: #subxt::Runtime + #module> #call_trait<T> for #subxt::Client<T>
@@ -109,7 +109,7 @@ pub fn call(s: Structure) -> TokenStream {
                 &'a self,
                 signer: &'a (dyn #subxt::Signer<T> + Send + Sync),
                 #args
-            ) -> core::pin::Pin<Box<dyn core::future::Future<Output = Result<(#subxt::ExtrinsicSuccess<T>, Option<RuntimeDispatchInfo<Balance>>), #subxt::Error>> + Send + 'a>> {
+            ) -> core::pin::Pin<Box<dyn core::future::Future<Output = Result<#subxt::ExtrinsicSuccessWithFee<T, Balance>, #subxt::Error>> + Send + 'a>> {
                 let #marker = core::marker::PhantomData::<T>;
                 Box::pin(self.watch_with_fee(#build_struct, signer))
             }
@@ -166,7 +166,7 @@ mod tests {
                     signer: &'a (dyn substrate_subxt::Signer<T> + Send + Sync),
                     to: &'a <T as System>::Address,
                     amount: T::Balance,
-                ) -> core::pin::Pin<Box<dyn core::future::Future<Output = Result<(substrate_subxt::ExtrinsicSuccess<T>, Option<RuntimeDispatchInfo<Balance>>), substrate_subxt::Error>> + Send + 'a>>;
+                ) -> core::pin::Pin<Box<dyn core::future::Future<Output = Result<substrate_subxt::ExtrinsicSuccessWithFee<T, Balance>, substrate_subxt::Error>> + Send + 'a>>;
             }
 
             impl<T: substrate_subxt::Runtime + Balances> TransferCallExt<T> for substrate_subxt::Client<T>
@@ -198,7 +198,7 @@ mod tests {
                     signer: &'a (dyn substrate_subxt::Signer<T> + Send + Sync),
                     to: &'a <T as System>::Address,
                     amount: T::Balance,
-                ) -> core::pin::Pin<Box<dyn core::future::Future<Output = Result<(substrate_subxt::ExtrinsicSuccess<T>, Option<RuntimeDispatchInfo<Balance>>), substrate_subxt::Error>> + Send + 'a>> {
+                ) -> core::pin::Pin<Box<dyn core::future::Future<Output = Result<substrate_subxt::ExtrinsicSuccessWithFee<T, Balance>, substrate_subxt::Error>> + Send + 'a>> {
                     let _ = core::marker::PhantomData::<T>;
                     Box::pin(self.watch_with_fee(TransferCall { to, amount, }, signer))
                 }

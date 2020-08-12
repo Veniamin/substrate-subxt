@@ -41,6 +41,7 @@ use sp_runtime::{
 };
 use sp_transaction_pool::TransactionStatus;
 use sp_version::RuntimeVersion;
+use frame_support::weights::{Weight, DispatchClass};
 
 use crate::{
     error::Error,
@@ -386,7 +387,7 @@ impl<T: Runtime> Rpc<T> {
         &self,
         extrinsic: E,
         decoder: EventsDecoder<T>,
-    ) -> Result<(ExtrinsicSuccess<T>, Option<RuntimeDispatchInfo<Balance>>), Error> {
+    ) -> Result<ExtrinsicSuccessWithFee<T, Balance>, Error> {
         let ext_hash = T::Hashing::hash_of(&extrinsic);
         log::info!("Submitting Extrinsic `{:?}`", ext_hash);
 
@@ -432,32 +433,17 @@ impl<T: Runtime> Rpc<T> {
                             }
 
                             let extrinsic = Bytes::from(signed_block.block.extrinsics[ext_index].encode());
-                            let dispatch_info = self.transaction_fee(extrinsic).await;
+                            let dispatch_info = self.transaction_fee(extrinsic).await.unwrap().unwrap();
 
-                            // if dispatch_info.is_err() {
-                            //     log::error!("Failed to get dispatch info (fee) {:?}", dispatch_info.err());
-                            //     Ok((
-                            //         ExtrinsicSuccess {
-                            //         block: block_hash,
-                            //         extrinsic: ext_hash,
-                            //         events,
-                            //     },
-                            //         RuntimeDispatchInfo {
-                            //            weight: 0,
-                            //            class: DispatchClass::Normal,
-                            //            partial_fee: 0, // TODO: zero balance
-                            //        }
-                            //     ))
-                            // } else {}
-                    
-                            Ok((
-                                ExtrinsicSuccess {
+                            Ok(
+                                ExtrinsicSuccessWithFee {
                                 block: block_hash,
                                 extrinsic: ext_hash,
                                 events,
-                            },
-                                dispatch_info.unwrap()
-                            ))
+                                weight: dispatch_info.weight,
+                                class: dispatch_info.class,
+                                partial_fee: dispatch_info.partial_fee,
+                            })
                         }
                         None => {
                             Err(format!("Failed to find block {:?}", block_hash).into())
@@ -539,6 +525,29 @@ pub struct ExtrinsicSuccess<T: System> {
     pub extrinsic: T::Hash,
     /// Raw runtime events, can be decoded by the caller.
     pub events: Vec<RawEvent>,
+}
+
+/// Captures data for when an extrinsic is successfully included in a block, includes fee, weight and dispatch class
+#[derive(Debug)]
+pub struct ExtrinsicSuccessWithFee<T: System, Balance> {
+    /// Block hash.
+    pub block: T::Hash,
+    /// Extrinsic hash.
+    pub extrinsic: T::Hash,
+    /// Raw runtime events, can be decoded by the caller.
+    pub events: Vec<RawEvent>,
+    /// 
+    pub weight: Weight,
+    /// 
+	pub class: DispatchClass,
+	/// This does not include a tip or anything else that
+	/// depends on the signature (i.e. depends on a `SignedExtension`).
+	#[cfg_attr(feature = "std", serde(bound(serialize = "Balance: std::fmt::Display")))]
+	#[cfg_attr(feature = "std", serde(serialize_with = "serialize_as_string"))]
+	#[cfg_attr(feature = "std", serde(bound(deserialize = "Balance: std::str::FromStr")))]
+	#[cfg_attr(feature = "std", serde(deserialize_with = "deserialize_from_string"))]
+	pub partial_fee: Balance,
+
 }
 
 impl<T: System> ExtrinsicSuccess<T> {

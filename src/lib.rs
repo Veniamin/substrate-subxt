@@ -75,7 +75,7 @@ pub use crate::{
     extrinsic::{PairSigner, SignedExtra, Signer, UncheckedExtrinsic},
     frame::*,
     metadata::{Metadata, MetadataError},
-    rpc::{BlockNumber, ExtrinsicSuccess},
+    rpc::{BlockNumber, ExtrinsicSuccess, ExtrinsicSuccessWithFee},
     runtimes::*,
     subscription::*,
     substrate_subxt_proc_macro::*,
@@ -385,7 +385,7 @@ impl<T: Runtime> Client<T> {
         &self,
         extrinsic: UncheckedExtrinsic<T>,
         decoder: EventsDecoder<T>,
-    ) -> Result<(ExtrinsicSuccess<T>, Option<RuntimeDispatchInfo<Balance>>), Error> {
+    ) -> Result<ExtrinsicSuccessWithFee<T, Balance>, Error> {
         self.rpc
             .submit_and_watch_extrinsic_with_fee(extrinsic, decoder)
             .await
@@ -425,7 +425,7 @@ impl<T: Runtime> Client<T> {
         &self,
         call: C,
         signer: &(dyn Signer<T> + Send + Sync),
-    ) -> Result<(ExtrinsicSuccess<T>, Option<RuntimeDispatchInfo<Balance>>), Error>
+    ) -> Result<ExtrinsicSuccessWithFee<T, Balance>, Error>
     where
         <<T::Extra as SignedExtra<T>>::Extra as SignedExtension>::AdditionalSigned:
             Send + Sync,
