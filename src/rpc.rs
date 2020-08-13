@@ -433,16 +433,14 @@ impl<T: Runtime> Rpc<T> {
                             }
 
                             let extrinsic = Bytes::from(signed_block.block.extrinsics[ext_index].encode());
-                            let dispatch_info = self.transaction_fee(extrinsic).await.unwrap().unwrap();
+                            let dispatch_info = self.transaction_fee(extrinsic).await?;
 
                             Ok(
                                 ExtrinsicSuccessWithFee {
                                 block: block_hash,
                                 extrinsic: ext_hash,
                                 events,
-                                weight: dispatch_info.weight,
-                                class: dispatch_info.class,
-                                partial_fee: dispatch_info.partial_fee,
+                                dispatch_info,
                             })
                         }
                         None => {
@@ -537,16 +535,7 @@ pub struct ExtrinsicSuccessWithFee<T: System, Balance> {
     /// Raw runtime events, can be decoded by the caller.
     pub events: Vec<RawEvent>,
     /// 
-    pub weight: Weight,
-    /// 
-	pub class: DispatchClass,
-	/// This does not include a tip or anything else that
-	/// depends on the signature (i.e. depends on a `SignedExtension`).
-	#[cfg_attr(feature = "std", serde(bound(serialize = "Balance: std::fmt::Display")))]
-	#[cfg_attr(feature = "std", serde(serialize_with = "serialize_as_string"))]
-	#[cfg_attr(feature = "std", serde(bound(deserialize = "Balance: std::str::FromStr")))]
-	#[cfg_attr(feature = "std", serde(deserialize_with = "deserialize_from_string"))]
-	pub partial_fee: Balance,
+    pub dispatch_info: Option<RuntimeDispatchInfo<Balance>>,
 
 }
 
