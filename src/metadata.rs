@@ -249,10 +249,10 @@ pub struct StorageMetadata {
 }
 
 impl StorageMetadata {
-    pub fn prefix(&self) -> Vec<u8> {
+    pub fn prefix(&self) -> StorageKey {
         let mut bytes = sp_core::twox_128(self.module_prefix.as_bytes()).to_vec();
         bytes.extend(&sp_core::twox_128(self.storage_prefix.as_bytes())[..]);
-        bytes
+        StorageKey(bytes)
     }
 
     pub fn default<V: Decode>(&self) -> Result<V, MetadataError> {
@@ -274,7 +274,13 @@ impl StorageMetadata {
             StorageHasher::Blake2_256 => sp_core::blake2_256(bytes).to_vec(),
             StorageHasher::Twox128 => sp_core::twox_128(bytes).to_vec(),
             StorageHasher::Twox256 => sp_core::twox_256(bytes).to_vec(),
-            StorageHasher::Twox64Concat => sp_core::twox_64(bytes).to_vec(),
+            StorageHasher::Twox64Concat => {
+                sp_core::twox_64(bytes)
+                    .iter()
+                    .chain(bytes)
+                    .cloned()
+                    .collect()
+            }
         }
     }
 
@@ -286,7 +292,7 @@ impl StorageMetadata {
         match &self.ty {
             StorageEntryType::Plain(_) => {
                 Ok(StoragePlain {
-                    prefix: self.prefix(),
+                    prefix: self.prefix().0,
                 })
             }
             _ => Err(MetadataError::StorageTypeError),
@@ -298,7 +304,7 @@ impl StorageMetadata {
             StorageEntryType::Map { hasher, .. } => {
                 Ok(StorageMap {
                     _marker: PhantomData,
-                    prefix: self.prefix(),
+                    prefix: self.prefix().0,
                     hasher: hasher.clone(),
                 })
             }
@@ -317,7 +323,7 @@ impl StorageMetadata {
             } => {
                 Ok(StorageDoubleMap {
                     _marker: PhantomData,
-                    prefix: self.prefix(),
+                    prefix: self.prefix().0,
                     hasher1: hasher.clone(),
                     hasher2: key2_hasher.clone(),
                 })
