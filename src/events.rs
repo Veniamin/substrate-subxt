@@ -39,7 +39,10 @@ use std::{
 };
 
 use crate::{
-    error::Error,
+    error::{
+        Error,
+        RuntimeError,
+    },
     metadata::{
         EventArg,
         Metadata,
@@ -151,6 +154,20 @@ impl<T: System> EventsDecoder<T> {
                         self.decode_raw_bytes(&[*arg.clone()], input, output)?
                     }
                 }
+                EventArg::Option(arg) => {
+                    match input.read_byte()? {
+                        0 => output.push_byte(0),
+                        1 => {
+                            output.push_byte(1);
+                            self.decode_raw_bytes(&[*arg.clone()], input, output)?
+                        }
+                        _ => {
+                            return Err(Error::Other(
+                                "unexpected first byte decoding Option".into(),
+                            ))
+                        }
+                    }
+                }
                 EventArg::Tuple(args) => self.decode_raw_bytes(args, input, output)?,
                 EventArg::Primitive(name) => {
                     let result = match name.as_str() {
@@ -168,7 +185,9 @@ impl<T: System> EventsDecoder<T> {
                         }
                     };
                     if let Err(error) = result {
-                        Error::from_dispatch(&self.metadata, error)?;
+                        return Err(
+                            RuntimeError::from_dispatch(&self.metadata, error)?.into()
+                        )
                     }
                 }
             }
@@ -177,10 +196,7 @@ impl<T: System> EventsDecoder<T> {
     }
 
     /// Decode events.
-    pub fn decode_events(
-        &self,
-        input: &mut &[u8],
-    ) -> Result<Vec<(Phase, RawEvent)>, Error> {
+    pub fn decode_events(&self, input: &mut &[u8]) -> Result<Vec<(Phase, Raw)>, Error> {
         let compact_len = <Compact<u32>>::decode(input)?;
         let len = compact_len.0 as usize;
 
@@ -201,20 +217,64 @@ impl<T: System> EventsDecoder<T> {
             );
 
             let mut event_data = Vec::<u8>::new();
-            self.decode_raw_bytes(&event_metadata.arguments(), input, &mut event_data)?;
+            let result = self.decode_raw_bytes(
+                &event_metadata.arguments(),
+                input,
+                &mut event_data,
+            );
+            let raw = match result {
+                Ok(()) => {
+                    log::debug!("raw bytes: {}", hex::encode(&event_data),);
 
-            log::debug!("raw bytes: {}", hex::encode(&event_data),);
+                    let event = RawEvent {
+                        module: module.name().to_string(),
+                        variant: event_metadata.name.clone(),
+                        data: event_data,
+                    };
 
-            let event = RawEvent {
-                module: module.name().to_string(),
-                variant: event_metadata.name.clone(),
-                data: event_data,
+                    // topics come after the event data in EventRecord
+                    let _topics = Vec::<T::Hash>::decode(input)?;
+                    Raw::Event(event)
+                }
+                Err(Error::Runtime(err)) => Raw::Error(err),
+                Err(err) => return Err(err),
             };
 
-            // topics come after the event data in EventRecord
-            let _topics = Vec::<T::Hash>::decode(input)?;
-            r.push((phase, event));
+            r.push((phase, raw));
         }
         Ok(r)
+    }
+}
+
+pub enum Raw {
+    Event(RawEvent),
+    Error(RuntimeError),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    type TestRuntime = crate::NodeTemplateRuntime;
+
+    #[test]
+    fn test_decode_option() {
+        let decoder = EventsDecoder::<TestRuntime>::new(Metadata::default());
+
+        let value = Some(0u8);
+        let input = value.encode();
+        let mut output = Vec::<u8>::new();
+
+        decoder
+            .decode_raw_bytes(
+                &[EventArg::Option(Box::new(EventArg::Primitive(
+                    "u8".to_string(),
+                )))],
+                &mut &input[..],
+                &mut output,
+            )
+            .unwrap();
+
+        assert_eq!(output, vec![1, 0]);
     }
 }

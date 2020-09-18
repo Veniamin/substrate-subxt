@@ -73,7 +73,7 @@ pub enum MetadataError {
 }
 
 /// Runtime metadata.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Metadata {
     modules: HashMap<String, ModuleMetadata>,
     modules_with_calls: HashMap<String, ModuleWithCalls>,
@@ -93,10 +93,8 @@ impl Metadata {
             .ok_or(MetadataError::ModuleNotFound(name))
     }
 
-    pub(crate) fn module_with_calls<S>(
-        &self,
-        name: S,
-    ) -> Result<&ModuleWithCalls, MetadataError>
+    /// Returns `ModuleWithCalls`.
+    pub fn module_with_calls<S>(&self, name: S) -> Result<&ModuleWithCalls, MetadataError>
     where
         S: ToString,
     {
@@ -106,11 +104,13 @@ impl Metadata {
             .ok_or(MetadataError::ModuleNotFound(name))
     }
 
-    pub(crate) fn modules_with_events(&self) -> impl Iterator<Item = &ModuleWithEvents> {
+    /// Returns Iterator of `ModuleWithEvents`.
+    pub fn modules_with_events(&self) -> impl Iterator<Item = &ModuleWithEvents> {
         self.modules_with_events.values()
     }
 
-    pub(crate) fn module_with_events(
+    /// Returns `ModuleWithEvents`.
+    pub fn module_with_events(
         &self,
         module_index: u8,
     ) -> Result<&ModuleWithEvents, MetadataError> {
@@ -120,7 +120,8 @@ impl Metadata {
             .ok_or(MetadataError::ModuleIndexNotFound(module_index))
     }
 
-    pub(crate) fn module_with_errors(
+    /// Returns `ModuleWithErrors`.
+    pub fn module_with_errors(
         &self,
         module_index: u8,
     ) -> Result<&ModuleWithErrors, MetadataError> {
@@ -398,6 +399,7 @@ pub enum EventArg {
     Primitive(String),
     Vec(Box<EventArg>),
     Tuple(Vec<EventArg>),
+    Option(Box<EventArg>),
 }
 
 impl FromStr for EventArg {
@@ -411,6 +413,15 @@ impl FromStr for EventArg {
                 Err(ConversionError::InvalidEventArg(
                     s.to_string(),
                     "Expected closing `>` for `Vec`",
+                ))
+            }
+        } else if s.starts_with("Option<") {
+            if s.ends_with('>') {
+                Ok(EventArg::Option(Box::new(s[7..s.len() - 1].parse()?)))
+            } else {
+                Err(ConversionError::InvalidEventArg(
+                    s.to_string(),
+                    "Expected closing `>` for `Option`",
                 ))
             }
         } else if s.starts_with('(') {
@@ -439,6 +450,7 @@ impl EventArg {
         match self {
             EventArg::Primitive(p) => vec![p.clone()],
             EventArg::Vec(arg) => arg.primitives(),
+            EventArg::Option(arg) => arg.primitives(),
             EventArg::Tuple(args) => {
                 let mut primitives = Vec::new();
                 for arg in args {
