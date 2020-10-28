@@ -41,12 +41,12 @@ use sp_runtime::{
 };
 use sp_transaction_pool::TransactionStatus;
 use sp_version::RuntimeVersion;
-use frame_support::weights::{Weight, DispatchClass};
+//use frame_support::weights::{Weight, DispatchClass};
 
 use crate::{
     error::Error,
     events::{EventsDecoder, RawEvent},
-    frame::{balances::Balances, system::System, Event,},
+    frame::{system::System, Event,},
     metadata::Metadata,
     runtimes::Runtime,
     subscription::EventSubscription,
@@ -71,6 +71,17 @@ impl From<u32> for BlockNumber {
     }
 }
 
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq, Default)]
+#[serde(rename_all = "camelCase")]
+/// System properties for a Substrate-based runtime
+pub struct SystemProperties {
+    /// The address format
+    pub ss58_format: u8,
+    /// The number of digits after the decimal point in the native token
+    pub token_decimals: u8,
+    /// The symbol of the native token
+    pub token_symbol: String,
+}
 /// Client for substrate rpc interfaces
 pub struct Rpc<T: Runtime> {
     client: Client,
@@ -181,6 +192,14 @@ impl<T: Runtime> Rpc<T> {
         let meta: RuntimeMetadataPrefixed = Decode::decode(&mut &bytes[..])?;
         let metadata: Metadata = meta.try_into()?;
         Ok(metadata)
+    }
+
+    /// Fetch system properties
+    pub async fn system_properties(&self) -> Result<SystemProperties, Error> {
+        Ok(self
+            .client
+            .request("system_properties", Params::None)
+            .await?)
     }
 
     /// Get a header
@@ -396,7 +415,7 @@ impl<T: Runtime> Rpc<T> {
                         None => {
                             Err(format!("Failed to find block {:?}", block_hash).into())
                         }
-                    };
+                    }
                 }
                 TransactionStatus::Invalid => return Err("Extrinsic Invalid".into()),
                 TransactionStatus::Usurped(_) => return Err("Extrinsic Usurped".into()),
@@ -423,7 +442,7 @@ impl<T: Runtime> Rpc<T> {
         decoder: EventsDecoder<T>,
     ) -> Result<ExtrinsicSuccessWithFee<T, Balance>, Error> {
         let ext_hash = T::Hashing::hash_of(&extrinsic);
-        log::info!("Submitting Extrinsic `{:?}`", ext_hash);
+        log::info!("Submitting Extrinsic {:?}", ext_hash);
 
         let events_sub = self.subscribe_events().await?;
         let mut xt_sub = self.watch_extrinsic(extrinsic).await?;
@@ -488,7 +507,7 @@ impl<T: Runtime> Rpc<T> {
                 TransactionStatus::Retracted(_) => {
                     return Err("Extrinsic Retracted".into())
                 }
-                // should have made it `InBlock` before either of these
+                // should have made it InBlock before either of these
                 TransactionStatus::Finalized(_) => {
                     return Err("Extrinsic Finalized".into())
                 }

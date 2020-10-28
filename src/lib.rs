@@ -35,7 +35,8 @@
     while_true,
     trivial_casts,
     trivial_numeric_casts,
-    unused_extern_crates
+    unused_extern_crates,
+    clippy::all
 )]
 #![allow(clippy::type_complexity)]
 
@@ -48,16 +49,12 @@ pub use substrate_subxt_client as client;
 pub use sp_core;
 pub use sp_runtime;
 
-use codec::{Encode, Decode};
+use codec::{Decode, Encode};
 use futures::future;
 use jsonrpsee::client::Subscription;
 use sc_rpc_api::state::ReadProof;
 use sp_core::{
-    storage::{
-        StorageChangeSet,
-        StorageData,
-        StorageKey,
-    },
+    storage::{StorageChangeSet, StorageData, StorageKey},
     Bytes,
 };
 pub use sp_runtime::traits::SignedExtension;
@@ -85,8 +82,9 @@ pub use crate::{
     substrate_subxt_proc_macro::*,
 };
 use crate::{
-    frame::balances::Balances,
+    //frame::balances::Balances,
     frame::system::{AccountStoreExt, Phase, System},
+    rpc::SystemProperties,
     rpc::{ChainBlock, Rpc},
 };
 use pallet_transaction_payment_rpc_runtime_api::RuntimeDispatchInfo;
@@ -142,16 +140,18 @@ impl<T: Runtime> ClientBuilder<T> {
             }
         };
         let rpc = Rpc::new(client);
-        let (metadata, genesis_hash, runtime_version) = future::join3(
+        let (metadata, genesis_hash, runtime_version, properties) = future::join4(
             rpc.metadata(),
             rpc.genesis_hash(),
             rpc.runtime_version(None),
+            rpc.system_properties(),
         )
         .await;
         Ok(Client {
             rpc,
             genesis_hash: genesis_hash?,
             metadata: metadata?,
+            properties: properties.unwrap_or_else(|_| Default::default()),
             runtime_version: runtime_version?,
             _marker: PhantomData,
             page_size: self.page_size.unwrap_or(10),
@@ -164,6 +164,7 @@ pub struct Client<T: Runtime> {
     rpc: Rpc<T>,
     genesis_hash: T::Hash,
     metadata: Metadata,
+    properties: SystemProperties,
     runtime_version: RuntimeVersion,
     _marker: PhantomData<(fn() -> T::Signature, T::Extra)>,
     page_size: u32,
@@ -175,6 +176,7 @@ impl<T: Runtime> Clone for Client<T> {
             rpc: self.rpc.clone(),
             genesis_hash: self.genesis_hash,
             metadata: self.metadata.clone(),
+            properties: self.properties.clone(),
             runtime_version: self.runtime_version.clone(),
             _marker: PhantomData,
             page_size: self.page_size,
@@ -197,7 +199,7 @@ impl<T: Runtime, F: Store<T>> KeyIter<T, F> {
     pub async fn next(&mut self) -> Result<Option<(StorageKey, F::Returns)>, Error> {
         loop {
             if let Some((k, v)) = self.buffer.pop() {
-                return Ok(Some((k, Decode::decode(&mut &v.0[..])?)))
+                return Ok(Some((k, Decode::decode(&mut &v.0[..])?)));
             } else {
                 let keys = self
                     .client
@@ -205,7 +207,7 @@ impl<T: Runtime, F: Store<T>> KeyIter<T, F> {
                     .await?;
 
                 if keys.is_empty() {
-                    return Ok(None)
+                    return Ok(None);
                 }
 
                 self.start_key = keys.last().cloned();
@@ -239,6 +241,10 @@ impl<T: Runtime> Client<T> {
         &self.metadata
     }
 
+    /// Returns the system properties
+    pub fn properties(&self) -> &SystemProperties {
+        &self.properties
+    }
     /// Fetch the value under an unhashed storage key
     pub async fn fetch_unhashed<V: Decode>(
         &self,
@@ -276,10 +282,7 @@ impl<T: Runtime> Client<T> {
     }
 
     /// Returns an iterator of key value pairs.
-    pub async fn iter<F: Store<T>>(
-        &self,
-        hash: Option<T::Hash>,
-    ) -> Result<KeyIter<T, F>, Error> {
+    pub async fn iter<F: Store<T>>(&self, hash: Option<T::Hash>) -> Result<KeyIter<T, F>, Error> {
         let hash = if let Some(hash) = hash {
             hash
         } else {
@@ -362,7 +365,6 @@ impl<T: Runtime> Client<T> {
         &self,
         extrinsic: Bytes,
     ) -> Result<Option<RuntimeDispatchInfo<Balance>>, Error> {
-
         let dispatch_info = self.rpc.transaction_fee(extrinsic).await?;
         Ok(dispatch_info)
     }
@@ -372,13 +374,15 @@ impl<T: Runtime> Client<T> {
         &self,
         call: C,
         signer: &(dyn Signer<T> + Send + Sync),
-    ) -> Result<Option<RuntimeDispatchInfo<Balance>>, Error> 
+    ) -> Result<Option<RuntimeDispatchInfo<Balance>>, Error>
     where
-        <<T::Extra as SignedExtra<T>>::Extra as SignedExtension>::AdditionalSigned:
-            Send + Sync,
+        <<T::Extra as SignedExtra<T>>::Extra as SignedExtension>::AdditionalSigned: Send + Sync,
     {
         let extrinsic = self.create_signed(call, signer).await?;
-        let dispatch_info = self.rpc.transaction_fee(Bytes::from(extrinsic.encode())).await?;
+        let dispatch_info = self
+            .rpc
+            .transaction_fee(Bytes::from(extrinsic.encode()))
+            .await?;
         Ok(dispatch_info)
     }
 
@@ -396,9 +400,7 @@ impl<T: Runtime> Client<T> {
     }
 
     /// Subscribe to events.
-    pub async fn subscribe_events(
-        &self,
-    ) -> Result<Subscription<StorageChangeSet<T::Hash>>, Error> {
+    pub async fn subscribe_events(&self) -> Result<Subscription<StorageChangeSet<T::Hash>>, Error> {
         let events = self.rpc.subscribe_events().await?;
         Ok(events)
     }
@@ -410,9 +412,7 @@ impl<T: Runtime> Client<T> {
     }
 
     /// Subscribe to finalized blocks.
-    pub async fn subscribe_finalized_blocks(
-        &self,
-    ) -> Result<Subscription<T::Header>, Error> {
+    pub async fn subscribe_finalized_blocks(&self) -> Result<Subscription<T::Header>, Error> {
         let headers = self.rpc.subscribe_finalized_blocks().await?;
         Ok(headers)
     }
@@ -441,8 +441,7 @@ impl<T: Runtime> Client<T> {
         signer: &(dyn Signer<T> + Send + Sync),
     ) -> Result<UncheckedExtrinsic<T>, Error>
     where
-        <<T::Extra as SignedExtra<T>>::Extra as SignedExtension>::AdditionalSigned:
-            Send + Sync,
+        <<T::Extra as SignedExtra<T>>::Extra as SignedExtension>::AdditionalSigned: Send + Sync,
     {
         let account_nonce = if let Some(nonce) = signer.nonce() {
             nonce
@@ -506,8 +505,7 @@ impl<T: Runtime> Client<T> {
         signer: &(dyn Signer<T> + Send + Sync),
     ) -> Result<T::Hash, Error>
     where
-        <<T::Extra as SignedExtra<T>>::Extra as SignedExtension>::AdditionalSigned:
-            Send + Sync,
+        <<T::Extra as SignedExtra<T>>::Extra as SignedExtension>::AdditionalSigned: Send + Sync,
     {
         let extrinsic = self.create_signed(call, signer).await?;
         self.submit_extrinsic(extrinsic).await
@@ -520,8 +518,7 @@ impl<T: Runtime> Client<T> {
         signer: &(dyn Signer<T> + Send + Sync),
     ) -> Result<ExtrinsicSuccess<T>, Error>
     where
-        <<T::Extra as SignedExtra<T>>::Extra as SignedExtension>::AdditionalSigned:
-            Send + Sync,
+        <<T::Extra as SignedExtra<T>>::Extra as SignedExtension>::AdditionalSigned: Send + Sync,
     {
         let extrinsic = self.create_signed(call, signer).await?;
         let decoder = self.events_decoder::<C>();
@@ -535,12 +532,12 @@ impl<T: Runtime> Client<T> {
         signer: &(dyn Signer<T> + Send + Sync),
     ) -> Result<ExtrinsicSuccessWithFee<T, Balance>, Error>
     where
-        <<T::Extra as SignedExtra<T>>::Extra as SignedExtension>::AdditionalSigned:
-            Send + Sync,
+        <<T::Extra as SignedExtra<T>>::Extra as SignedExtension>::AdditionalSigned: Send + Sync,
     {
         let extrinsic = self.create_signed(call, signer).await?;
         let decoder = self.events_decoder::<C>();
-        self.submit_and_watch_extrinsic_with_fee(extrinsic, decoder).await
+        self.submit_and_watch_extrinsic_with_fee(extrinsic, decoder)
+            .await
     }
 
     /// Insert a key into the keystore.
@@ -570,11 +567,7 @@ impl<T: Runtime> Client<T> {
     /// Checks if the keystore has private keys for the given public key and key type.
     ///
     /// Returns `true` if a private key could be found.
-    pub async fn has_key(
-        &self,
-        public_key: Bytes,
-        key_type: String,
-    ) -> Result<bool, Error> {
+    pub async fn has_key(&self, public_key: Bytes, key_type: String) -> Result<bool, Error> {
         self.rpc.has_key(public_key, key_type).await
     }
 }
@@ -602,9 +595,7 @@ mod tests {
 
     pub(crate) type TestRuntime = crate::NodeTemplateRuntime;
 
-    pub(crate) async fn test_client_with(
-        key: AccountKeyring,
-    ) -> (Client<TestRuntime>, TempDir) {
+    pub(crate) async fn test_client_with(key: AccountKeyring) -> (Client<TestRuntime>, TempDir) {
         env_logger::try_init().ok();
         let tmp = TempDir::new("subxt-").expect("failed to create tempdir");
         let config = SubxtClientConfig {

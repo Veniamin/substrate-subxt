@@ -46,7 +46,6 @@ use sp_runtime::{
     DispatchError,
 };
 use std::fmt::Debug;
-use pallet_transaction_payment_rpc_runtime_api::RuntimeDispatchInfo;
 
 /// The subset of the `frame::Trait` that a client must implement.
 #[module]
@@ -97,13 +96,7 @@ pub trait System {
     type Hashing: Hash<Output = Self::Hash>;
 
     /// The user account identifier type for the runtime.
-    type AccountId: Parameter
-        + Member
-        + MaybeSerialize
-        + Debug
-        + MaybeDisplay
-        + Ord
-        + Default;
+    type AccountId: Parameter + Member + MaybeSerialize + MaybeDisplay + Ord + Default;
 
     /// The address type. This instead of `<frame_system::Trait::Lookup as StaticLookup>::Source`.
     #[module(ignore)]
@@ -125,7 +118,7 @@ pub trait System {
 }
 
 /// Type used to encode the number of references an account has.
-pub type RefCount = u8;
+pub type RefCount = u32;
 
 /// Information of an account.
 #[derive(Clone, Debug, Eq, PartialEq, Default, Decode, Encode)]
