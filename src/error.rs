@@ -131,6 +131,7 @@ impl RuntimeError {
             DispatchError::BadOrigin => Ok(Self::BadOrigin),
             DispatchError::CannotLookup => Ok(Self::CannotLookup),
             DispatchError::Other(msg) => Ok(Self::Other(msg.into())),
+            _ => Ok(Self::Other("other".to_string())),
         }
     }
 }
