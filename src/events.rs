@@ -180,8 +180,23 @@ impl<T: System> EventsDecoder<T> {
                 EventArg::Tuple(args) => self.decode_raw_bytes(args, input, output)?,
                 EventArg::Primitive(name) => {
                     let result = match name.as_str() {
-                        "DispatchResult" => DispatchResult::decode(input)?,
-                        "DispatchError" => Err(DispatchError::decode(input)?),
+                        "DispatchResult" => {
+                            let res = DispatchResult::decode(input)?;
+                            if res.is_err() {
+                                // maybe option, but always None for now
+                                // only if error
+                                Option::<u64>::decode(input)?;
+                            }
+                            res
+                        }
+                        "DispatchError" => {
+                            let res = Err(DispatchError::decode(input)?);
+                            // seems like DispatchInfo
+                            println!("DispatchInfo {:?}", DispatchInfo::decode(input)?);
+                            // maybe option, but always None for now
+                            Option::<u64>::decode(input)?;
+                            res
+                        }
                         _ => {
                             if let Some(size) = self.type_sizes.get(name) {
                                 let mut buf = vec![0; *size];
