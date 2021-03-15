@@ -39,9 +39,9 @@ sp-transaction-pool = { version = "3.0.0", default-features = false }
 sp-version = { version = "3.0.0", default-features = false }
 
 [build-dependencies.substrate-wasm-builder]
-git = 'https://github.com/paritytech/substrate.git'
+git = 'https://github.com/equilibrium-eosdt/substrate'
 package = 'substrate-wasm-builder'
-tag = 'v3.0.0'
+branch = 'v3.0.0eq'
 version = '4.0.0'
 
 [features]

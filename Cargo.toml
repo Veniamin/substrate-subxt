@@ -40,95 +40,95 @@ codec = { package = "parity-scale-codec", version = "2.0.0", default-features = 
 sp-consensus-babe = "0.9.0"
 
 [dependencies.frame-metadata]
-git = 'https://github.com/paritytech/substrate.git'
+git = 'https://github.com/equilibrium-eosdt/substrate'
 version = '13.0.0'
-tag="v3.0.0"
+branch="v3.0.0eq"
 
 [dependencies.frame-support]
-git = 'https://github.com/paritytech/substrate.git'
+git = 'https://github.com/equilibrium-eosdt/substrate'
 version = '3.0.0'
-tag="v3.0.0"
+branch="v3.0.0eq"
 
 [dependencies.pallet-transaction-payment-rpc-runtime-api]
-git = 'https://github.com/paritytech/substrate.git'
+git = 'https://github.com/equilibrium-eosdt/substrate'
 package = 'pallet-transaction-payment-rpc-runtime-api'
 version = '3.0.0'
-tag="v3.0.0"
+branch="v3.0.0eq"
 
 [dependencies.sp-runtime]
-git = 'https://github.com/paritytech/substrate.git'
+git = 'https://github.com/equilibrium-eosdt/substrate'
 version = '3.0.0'
-tag="v3.0.0"
+branch="v3.0.0eq"
 
 [dependencies.sp-version]
-git = 'https://github.com/paritytech/substrate.git'
+git = 'https://github.com/equilibrium-eosdt/substrate'
 version = '3.0.0'
-tag="v3.0.0"
+branch="v3.0.0eq"
 
 [dependencies.pallet-indices]
-git = 'https://github.com/paritytech/substrate.git'
+git = 'https://github.com/equilibrium-eosdt/substrate'
 version = '3.0.0'
-tag="v3.0.0"
+branch="v3.0.0eq"
 
 [dependencies.sp-rpc]
 default-features = false
-git = 'https://github.com/paritytech/substrate.git'
+git = 'https://github.com/equilibrium-eosdt/substrate'
 version = '3.0.0'
-tag="v3.0.0"
+branch="v3.0.0eq"
 
 [dependencies.sp-core]
 default-features = false
-git = 'https://github.com/paritytech/substrate.git'
+git = 'https://github.com/equilibrium-eosdt/substrate'
 version = '3.0.0'
-tag="v3.0.0"
+branch="v3.0.0eq"
 
 [dependencies.sc-rpc-api]
 default-features = false
-git = 'https://github.com/paritytech/substrate.git'
+git = 'https://github.com/equilibrium-eosdt/substrate'
 version = '0.9.0'
-tag="v3.0.0"
+branch="v3.0.0eq"
 
 [dependencies.sp-transaction-pool]
 default-features = false
-git = 'https://github.com/paritytech/substrate.git'
+git = 'https://github.com/equilibrium-eosdt/substrate'
 version = '3.0.0'
-tag="v3.0.0"
+branch="v3.0.0eq"
 
 [dependencies.sp-std]
 default-features = false
-git = 'https://github.com/paritytech/substrate.git'
+git = 'https://github.com/equilibrium-eosdt/substrate'
 version = '3.0.0'
-tag="v3.0.0"
+branch="v3.0.0eq"
 
 [dependencies.sp-application-crypto]
 default-features = false
-git = 'https://github.com/paritytech/substrate.git'
+git = 'https://github.com/equilibrium-eosdt/substrate'
 version = '3.0.0'
-tag="v3.0.0"
+branch="v3.0.0eq"
 
 #[dependencies.sp-finality-grandpa]
 #default-features = false
-#git = 'https://github.com/paritytech/substrate.git'
+#git = 'https://github.com/equilibrium-eosdt/substrate'
 #version = '3.0.0'
-#tag="v3.0.0"
+#branch="v3.0.0eq"
 
 #[dependencies.sp-authority-discovery]
 #default-features = false
-#git = 'https://github.com/paritytech/substrate.git'
+#git = 'https://github.com/equilibrium-eosdt/substrate'
 #version = '3.0.0'
-#tag="v3.0.0"
+#branch="v3.0.0eq"
 
 #[dependencies.pallet-im-online]
 #default-features = false
-#git = 'https://github.com/paritytech/substrate.git'
+#git = 'https://github.com/equilibrium-eosdt/substrate'
 #version = '3.0.0'
-#tag="v3.0.0"
+#branch="v3.0.0eq"
 
 #[dependencies.pallet-staking]
 #default-features = false
-#git = 'https://github.com/paritytech/substrate.git'
+#git = 'https://github.com/equilibrium-eosdt/substrate'
 #version = '3.0.0'
-#tag="v3.0.0"
+#branch="v3.0.0eq"
 
 [dev-dependencies]
 async-std = { version = "1.6.4", features = ["attributes"] }
