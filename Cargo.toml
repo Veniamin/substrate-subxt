@@ -1,5 +1,5 @@
 [workspace]
-members = [".", "client", "proc-macro", "test-node"]
+members = [".", "client", "proc-macro"]
 
 [package]
 name = "substrate-subxt"
@@ -40,95 +40,95 @@ codec = { package = "parity-scale-codec", version = "2.0.0", default-features = 
 sp-consensus-babe = "0.9.0"
 
 [dependencies.frame-metadata]
-git = 'https://github.com/equilibrium-eosdt/substrate'
+git = 'https://github.com/paritytech/substrate'
 version = '13.0.0'
-branch="v3.0.0eq"
+branch="master"
 
 [dependencies.frame-support]
-git = 'https://github.com/equilibrium-eosdt/substrate'
+git = 'https://github.com/paritytech/substrate'
 version = '3.0.0'
-branch="v3.0.0eq"
+branch="master"
 
 [dependencies.pallet-transaction-payment-rpc-runtime-api]
-git = 'https://github.com/equilibrium-eosdt/substrate'
+git = 'https://github.com/paritytech/substrate'
 package = 'pallet-transaction-payment-rpc-runtime-api'
 version = '3.0.0'
-branch="v3.0.0eq"
+branch="master"
 
 [dependencies.sp-runtime]
-git = 'https://github.com/equilibrium-eosdt/substrate'
+git = 'https://github.com/paritytech/substrate'
 version = '3.0.0'
-branch="v3.0.0eq"
+branch="master"
 
 [dependencies.sp-version]
-git = 'https://github.com/equilibrium-eosdt/substrate'
+git = 'https://github.com/paritytech/substrate'
 version = '3.0.0'
-branch="v3.0.0eq"
+branch="master"
 
 [dependencies.pallet-indices]
-git = 'https://github.com/equilibrium-eosdt/substrate'
+git = 'https://github.com/paritytech/substrate'
 version = '3.0.0'
-branch="v3.0.0eq"
+branch="master"
 
 [dependencies.sp-rpc]
 default-features = false
-git = 'https://github.com/equilibrium-eosdt/substrate'
+git = 'https://github.com/paritytech/substrate'
 version = '3.0.0'
-branch="v3.0.0eq"
+branch="master"
 
 [dependencies.sp-core]
 default-features = false
-git = 'https://github.com/equilibrium-eosdt/substrate'
+git = 'https://github.com/paritytech/substrate'
 version = '3.0.0'
-branch="v3.0.0eq"
+branch="master"
 
 [dependencies.sc-rpc-api]
 default-features = false
-git = 'https://github.com/equilibrium-eosdt/substrate'
+git = 'https://github.com/paritytech/substrate'
 version = '0.9.0'
-branch="v3.0.0eq"
+branch="master"
 
 [dependencies.sp-transaction-pool]
 default-features = false
-git = 'https://github.com/equilibrium-eosdt/substrate'
+git = 'https://github.com/paritytech/substrate'
 version = '3.0.0'
-branch="v3.0.0eq"
+branch="master"
 
 [dependencies.sp-std]
 default-features = false
-git = 'https://github.com/equilibrium-eosdt/substrate'
+git = 'https://github.com/paritytech/substrate'
 version = '3.0.0'
-branch="v3.0.0eq"
+branch="master"
 
 [dependencies.sp-application-crypto]
 default-features = false
-git = 'https://github.com/equilibrium-eosdt/substrate'
+git = 'https://github.com/paritytech/substrate'
 version = '3.0.0'
-branch="v3.0.0eq"
+branch="master"
 
 #[dependencies.sp-finality-grandpa]
 #default-features = false
-#git = 'https://github.com/equilibrium-eosdt/substrate'
+#git = 'https://github.com/paritytech/substrate'
 #version = '3.0.0'
-#branch="v3.0.0eq"
+#branch="master"
 
 #[dependencies.sp-authority-discovery]
 #default-features = false
-#git = 'https://github.com/equilibrium-eosdt/substrate'
+#git = 'https://github.com/paritytech/substrate'
 #version = '3.0.0'
-#branch="v3.0.0eq"
+#branch="master"
 
 #[dependencies.pallet-im-online]
 #default-features = false
-#git = 'https://github.com/equilibrium-eosdt/substrate'
+#git = 'https://github.com/paritytech/substrate'
 #version = '3.0.0'
-#branch="v3.0.0eq"
+#branch="master"
 
 #[dependencies.pallet-staking]
 #default-features = false
-#git = 'https://github.com/equilibrium-eosdt/substrate'
+#git = 'https://github.com/paritytech/substrate'
 #version = '3.0.0'
-#branch="v3.0.0eq"
+#branch="master"
 
 [dev-dependencies]
 async-std = { version = "1.6.4", features = ["attributes"] }
@@ -138,6 +138,6 @@ pallet-balances = { version = "3.0.0", package = "pallet-balances" }
 sp-keyring = { version = "3.0.0", package = "sp-keyring" }
 substrate-subxt-client = { version = "0.5.0", path = "client" }
 tempdir = "0.3.7"
-test-node = { path = "test-node" }
+# test-node = { path = "test-node" }
 wabt = "0.10.0"
 assert_matches = "1.3"
