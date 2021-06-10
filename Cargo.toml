@@ -3,7 +3,7 @@ members = [".", "client", "proc-macro"]
 
 [package]
 name = "substrate-subxt"
-version = "0.13.1"
+version = "0.13.2"
 authors = ["Parity Technologies <admin@parity.io>"]
 edition = "2018"
 
@@ -42,93 +42,93 @@ sp-consensus-babe = "0.9.0"
 [dependencies.frame-metadata]
 git = 'https://github.com/paritytech/substrate'
 version = '13.0.0'
-branch="master"
+branch="polkadot-v0.9.4"
 
 [dependencies.frame-support]
 git = 'https://github.com/paritytech/substrate'
 version = '3.0.0'
-branch="master"
+branch="polkadot-v0.9.4"
 
 [dependencies.pallet-transaction-payment-rpc-runtime-api]
 git = 'https://github.com/paritytech/substrate'
 package = 'pallet-transaction-payment-rpc-runtime-api'
 version = '3.0.0'
-branch="master"
+branch="polkadot-v0.9.4"
 
 [dependencies.sp-runtime]
 git = 'https://github.com/paritytech/substrate'
 version = '3.0.0'
-branch="master"
+branch="polkadot-v0.9.4"
 
 [dependencies.sp-version]
 git = 'https://github.com/paritytech/substrate'
 version = '3.0.0'
-branch="master"
+branch="polkadot-v0.9.4"
 
 [dependencies.pallet-indices]
 git = 'https://github.com/paritytech/substrate'
 version = '3.0.0'
-branch="master"
+branch="polkadot-v0.9.4"
 
 [dependencies.sp-rpc]
 default-features = false
 git = 'https://github.com/paritytech/substrate'
 version = '3.0.0'
-branch="master"
+branch="polkadot-v0.9.4"
 
 [dependencies.sp-core]
 default-features = false
 git = 'https://github.com/paritytech/substrate'
 version = '3.0.0'
-branch="master"
+branch="polkadot-v0.9.4"
 
 [dependencies.sc-rpc-api]
 default-features = false
 git = 'https://github.com/paritytech/substrate'
 version = '0.9.0'
-branch="master"
+branch="polkadot-v0.9.4"
 
 [dependencies.sp-transaction-pool]
 default-features = false
 git = 'https://github.com/paritytech/substrate'
 version = '3.0.0'
-branch="master"
+branch="polkadot-v0.9.4"
 
 [dependencies.sp-std]
 default-features = false
 git = 'https://github.com/paritytech/substrate'
 version = '3.0.0'
-branch="master"
+branch="polkadot-v0.9.4"
 
 [dependencies.sp-application-crypto]
 default-features = false
 git = 'https://github.com/paritytech/substrate'
 version = '3.0.0'
-branch="master"
+branch="polkadot-v0.9.4"
 
 #[dependencies.sp-finality-grandpa]
 #default-features = false
 #git = 'https://github.com/paritytech/substrate'
 #version = '3.0.0'
-#branch="master"
+#branch="polkadot-v0.9.4"
 
 #[dependencies.sp-authority-discovery]
 #default-features = false
 #git = 'https://github.com/paritytech/substrate'
 #version = '3.0.0'
-#branch="master"
+#branch="polkadot-v0.9.4"
 
 #[dependencies.pallet-im-online]
 #default-features = false
 #git = 'https://github.com/paritytech/substrate'
 #version = '3.0.0'
-#branch="master"
+#branch="polkadot-v0.9.4"
 
 #[dependencies.pallet-staking]
 #default-features = false
 #git = 'https://github.com/paritytech/substrate'
 #version = '3.0.0'
-#branch="master"
+#branch="polkadot-v0.9.4"
 
 [dev-dependencies]
 async-std = { version = "1.6.4", features = ["attributes"] }
