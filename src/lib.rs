@@ -73,7 +73,7 @@ pub mod extrinsic;
 mod frame;
 mod metadata;
 mod rpc;
-mod runtimes;
+pub mod runtimes;
 mod subscription;
 #[cfg(test)]
 mod tests;
